@@ -1,0 +1,4 @@
+.vscode/
+BUILD/
+mbed-os/
+__pycache__/
