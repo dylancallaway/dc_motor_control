@@ -66,7 +66,7 @@ int main()
 void controller_1_fcn()
 {
     static int64_t err = 0;
-    static int64_t set = 10000;
+    static int64_t set = 1000;
     static float Kp = 0.01;
     static float out = 0;
 
