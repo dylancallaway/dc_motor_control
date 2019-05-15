@@ -32,7 +32,7 @@ PwmOut mot_1b(MOT_1B_PIN);
 
 // Controllers
 // Controller 1
-Thread controller_1_thread(osPriorityRealtime, 1024);
+Ticker controller_1_ticker;
 void controller_1_fcn();
 
 int main()
@@ -50,7 +50,7 @@ int main()
     mot_1b.write(0.0);
 
     // Controller 1
-    controller_1_thread.start(controller_1_fcn);
+    controller_1_ticker.attach_us(&controller_1_fcn, 100);
 
     // Heartbeat init after other inits
     heartbeat_thread.start(heartbeat_fcn);
@@ -58,40 +58,32 @@ int main()
     // Infinite loop
     while (true)
     {
-        // pc.printf("%d\n", enc_1_count);
-        wait(1);
+        pc.printf("%d\n", enc_1_count);
+        wait(0.5);
     }
 }
 
 void controller_1_fcn()
 {
-    Timer t;
-    int64_t err = 0;
-    int64_t set = 0;
-    float Kp = 0.001;
-    float out = 0;
+    static int64_t err = 0;
+    static int64_t set = 10000;
+    static float Kp = 0.01;
+    static float out = 0;
 
-    while (true)
+    if (out > 0)
     {
-        t.stop();
-        pc.printf("%d\n", t.read_us());
-        t.reset();
-        t.start();
-        err = set - enc_1_count;
-        out = Kp * err;
-
-        clamp(&out, -1.0, 1.0);
-        if (err > 0)
-        {
-            mot_1a.write(out);
-            mot_1b.write(0.0);
-        }
-        else if (err < 0)
-        {
-            mot_1a.write(0.0);
-            mot_1b.write(-out);
-        }
+        mot_1a.write(out);
+        mot_1b.write(0.0);
     }
+    else if (out < 0)
+    {
+        mot_1a.write(0.0);
+        mot_1b.write(-out);
+    }
+
+    err = set - enc_1_count;
+    out = Kp * err;
+    clamp(&out, -1.0, 1.0);
 }
 
 void enc_1_isr()
